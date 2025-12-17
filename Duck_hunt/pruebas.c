@@ -86,7 +86,8 @@ int main()
  */
 #include "graficos.h"
 #include "simplecontroller.h"
-#define GRAVEDAD 1
+#include <windows.h>
+#include <mmsystem.h>
 #define BTN 4
 #define JX 15
 #define JY 2
@@ -105,11 +106,7 @@ int main()
     esp32->pinMode(esp32, MTR, OUTPUT);
 
     int rx = 400, ry = 300;
-    int coordx = 100, coordy = 100;
     int movx, movy;
-    int aceleracion = 0;
-    bool izquierda_presionada = false;
-    bool derecha_presionada = false;
     bool btn = false;
     float jx, jy;
     bool vivo = true;
@@ -127,6 +124,7 @@ int main()
         jx = esp32->analogRead(esp32, JX);
         jy = esp32->analogRead(esp32, JY);
 
+        //Calibracion del joystick
         jx -= AJUSTE_X;
         if (jx >= 0)
             movx = (int)(jx * (10.0 / (1.0 - AJUSTE_X)));
@@ -141,14 +139,30 @@ int main()
 
         ventana.imprimeEnConsola("(%f, %f) - %i | %i, %i\n", jx, jy, btn, movx, movy);
 
+        //Seguro para evitar que se mueva
         if (movx != 5 && movy != 5)
         {
             rx += movx;
             ry += movy; 
         }
 
-        aceleracion += GRAVEDAD;
-        coordy += aceleracion;
+        //Limites de la pantalla
+        if (rx >= ventana.anchoVentana() - 100)
+        {
+            rx = ventana.anchoVentana() - 100;
+        }
+        if (rx <= 100)
+        {
+            rx = 100;
+        }
+        if (ry >= ventana.altoVentana() - 100)
+        {
+            ry = ventana.altoVentana() - 100;
+        }
+        if (ry <= 100)
+        {
+            ry = 100;
+        }
 
         tecla = ventana.teclaPresionada();
         //ventana.raton(&rx, &ry);
@@ -167,37 +181,26 @@ int main()
         if(!btn) {
             ventana.texto1(rx, ry, "Piyum!!", 50, "MV Boli");
             ventana.colorRGB(234,23,42);
-            ventana.circulo(400,300, 20);
-            rx = 400;
-            ry = 300;
             esp32->digitalWrite(esp32, MTR, true);
-
+            PlaySound("shot-duckhunt.wav",NULL,SND_FILENAME | SND_ASYNC);
         } else {
             esp32->digitalWrite(esp32, MTR, false);
-            ventana.colorRGB(234,23,42);
-            ventana.circulo(rx, ry, 20);
-            ventana.linea(rx - 10, ry, rx - 30, ry);
-            ventana.linea(rx + 10, ry, rx + 30, ry);
-            ventana.linea(rx, ry - 10, rx, ry - 30);
-            ventana.linea(rx, ry + 10, rx, ry + 30);
         }
 
         ventana.colorFondo(COLORES.VERDE); // Dibujamos
-        
-        if(vivo) {
-            ventana.muestraImagen(coordx, coordy, trex);
-        }
-        
+               
         // ventana.muestraImagenEscalada(coordx, coordy, 100, 100, trex);
+
+        ventana.colorRGB(234,23,42);
+        ventana.circulo(rx, ry, 20);
+        ventana.linea(rx - 10, ry, rx - 30, ry);
+        ventana.linea(rx + 10, ry, rx + 30, ry);
+        ventana.linea(rx, ry - 10, rx, ry - 30);
+        ventana.linea(rx, ry + 10, rx, ry + 30);
 
         ventana.actualizaVentana(); // Mostramos
 
         int tmp = ventana.teclaSoltada();
-
-        if (tmp == TECLAS.DERECHA)
-            derecha_presionada = false;
-        if (tmp == TECLAS.IZQUIERDA)
-            izquierda_presionada = false;
 
         ventana.espera(1);
     }

@@ -1,37 +1,34 @@
 EJECUTABLE = pruebas.exe
 MAIN = pruebas.c
 
-#Incluye las librerias que necesites, se incluye el .c
+#Incluye las librerias que necesites, se incluye el .c, todas tus librerias se colocan en una misma variable, separalas por espacios
 #---------------------------------
-LIB_1 = graficos.c
-LIB_2 = serial.c
-LIB_3 = simplecontroller.c
+LIBS = serial.c simplecontroller.c graficos.c
+#Reglas para permitir el enlazado correcto
+OBJ = $(LIBS:.c=.o)
+DEPS = $(OBJ:.o=.d)
 #---------------------------------
+
 #Escoge el compilador que necesites
 #---------------------------------
-COMPILER = gcc
-#---------------------------------
-#Añade las banderas que necesites
-#---------------------------------
-FLAG_1 = -mwindows
+CC = gcc
 #---------------------------------
 
-#Coloca los archivos .o de esas mismas librerias
-OBJ = graficos.o serial.o simplecontroller.o 
-#Pasa los archivos .o a .d, para que make pueda organizarse 
-DEPS = $(OBJ:.o=.d)
+#Añade las banderas que necesites, segun sean de compilación, enlazado, etc.
+#---------------------------------
+LDFLAGS += -mwindows -lwinmm
+#---------------------------------
 
+#Regla principal
 run: $(EJECUTABLE)
 	./$(EJECUTABLE)
 
 $(EJECUTABLE): $(MAIN) $(OBJ)
-	$(COMPILER) $(MAIN) $(OBJ) -o $(EJECUTABLE) $(FLAG_1)
-#El %.o: %.c crea una regla general que para todo archivo .c se pueda generar un .o
-#MDD crea un archivo .d con el que revisamos todas las dependencias .h
-%.o: %.c
-	$(COMPILER) -c -MD $< -o $@
-#Incluye los archivos .d si es que existen, el - evita errores
--include $(DEPS)
+	$(CC) $(MAIN) $(OBJ) -o $@ $(LDFLAGS)
+#MD crea un archivo .d con el que revisamos todas las dependencias .h
+%.o: %.c #El %.o: %.c crea una regla general que para todo archivo .c se pueda generar un .o
+	$(CC) -MD -c $< -o $@ 
+-include $(DEPS) #Incluye los archivos .d si es que existen, el - evita errores
 #Elimina los archivos temporales
 clean:
-	rm -f *.o $(EJECUTABLE)
+	rm -f *.o *.d $(EJECUTABLE) 
