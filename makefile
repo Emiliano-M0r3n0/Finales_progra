@@ -1,17 +1,34 @@
-APP=mov.exe
-MAIN=mov.c
-GRAFICOS_C=graficos.c
-GRAFICOS_H=graficos.h
-GRAFICS_LIB=graficos.o
-COMP=gcc
-WINFLAGS=-mwindows
-run: $(APP)
-	 ./$(APP)
-	 
-$(APP): $(MAIN) $(GRAFICOS_H) $(GRAFICS_LIB)
-	$(COMP) -o $(APP) $(GRAFICS_LIB) $(MAIN) $(WINFLAGS)
+# Nombre del archivo ejecutable
+TARGET = duckhunt.exe
 
-$(GRAFICS_L): $(GRAFICOS_H) $(GRAFICOS_C)
-	$(COMP) -c $(GRAFICOS_C) -o $(GRAFICOS_LIB)
+# Archivos de fuente
+SRCS = main.c graficos.c
+
+# Objetos (se generan automáticamente a partir de SRCS)
+OBJS = $(SRCS:.c=.o)
+
+# Compilador
+CC = gcc
+
+# Banderas del compilador
+# -mwindows evita que se abra una consola extra al iniciar el juego
+CFLAGS = -Wall -std=c99
+
+# Librerías de Windows necesarias:
+# gdi32: Para funciones de dibujo y bitmaps
+# winmm: Para la reproducción de sonidos (PlaySound)
+LIBS = -lgdi32 -lwinmm
+
+# Regla principal
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $(TARGET) $(LIBS)
+
+# Regla para compilar archivos .c a .o
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Limpiar archivos temporales
 clean:
-	del $(APP) $(GRAFICS_LIB)
+	del /f $(OBJS) $(TARGET)
